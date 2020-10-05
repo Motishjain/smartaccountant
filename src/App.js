@@ -1,19 +1,20 @@
 import React from "react";
 import "./App.css";
-import { HashRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { HashRouter as Router, Route } from "react-router-dom";
+import Home from "./components/Home";
 import SaleEntry from "./components/SaleEntry";
+import SalesStatement from "./components/SalesStatement";
 
 export default function App() {
   return (
-    <div>
-      <Router>
-        <Link to="/saleEntry">
-          <button>Sale Entry </button>
-        </Link>
-        <div>
-          <Route path="/saleEntry" component={SaleEntry} />
-        </div>
-      </Router>
-    </div>
+    <Router>
+      <div>
+        <main>
+          <Route exact path="/" component={Home} />
+          <Route exact path="/salesEntry" component={SaleEntry} />
+          <Route exact path="/salesStatement" component={SalesStatement} />
+        </main>
+      </div>
+    </Router>
   );
 }

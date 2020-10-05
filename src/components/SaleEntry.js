@@ -7,23 +7,13 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
+import { MdCancel as DeleteIcon } from "react-icons/md";
+import { MdAddCircle as AddIcon } from "react-icons/md";
 
 export default function SaleEntry() {
   const TAX_RATE = 0.07;
 
   const [items, setItems] = useState([
-    {
-      description: "",
-      qty: "",
-      rate: "",
-      total: "0",
-    },
-    {
-      description: "",
-      qty: "",
-      rate: "",
-      total: "0",
-    },
     {
       description: "",
       qty: "",
@@ -47,39 +37,49 @@ export default function SaleEntry() {
 
   function invoiceSubtotal() {
     console.log(items.map(({ total }) => total));
-    return items.map(({ total }) => total).reduce((sum, i) => sum + i, 0);
+    return items
+      .map(({ total }) => total)
+      .reduce(
+        (sum, currentValue) => parseFloat(sum) + parseFloat(currentValue),
+        0
+      );
   }
-
-  function handleDescriptionChange(event, index) {
-    var itemsCopy = items.slice();
-    itemsCopy[index].description = event.target.value;
-    setItems(itemsCopy);
-  }
-
   function calculateTotal(item) {
     return item.qty * item.rate;
   }
 
-  function handleQtyChange(event, index) {
-    var itemsCopy = items.slice();
-    itemsCopy[index].qty = event.target.value;
-    itemsCopy[index].total = calculateTotal(itemsCopy[index]);
-    setItems(itemsCopy);
-  }
+  let handleAddLineItem = (event) => {
+    setItems(
+      // use optimistic uuid for drag drop; in a production app this could be a database id
+      items.concat([{ description: "", qty: "", rate: "", total: "0" }])
+    );
+  };
 
-  function handleRateChange(event, index) {
-    var itemsCopy = items.slice();
-    itemsCopy[index].rate = event.target.value;
-    itemsCopy[index].total = calculateTotal(itemsCopy[index]);
-    setItems(itemsCopy);
-  }
+  let handleItemChange = (elementIndex) => (event) => {
+    let updatedItems = items.map((item, i) => {
+      if (elementIndex !== i) return item;
+      var updatedItem = { ...item, [event.target.name]: event.target.value };
+      updatedItem.total = calculateTotal(updatedItem);
+      return updatedItem;
+    });
+
+    setItems(updatedItems);
+  };
+
+  let handleRemoveLineItem = (elementIndex) => (event) => {
+    setItems(
+      items.filter((item, i) => {
+        return elementIndex !== i;
+      })
+    );
+  };
 
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="spanning table">
         <TableHead>
           <TableRow>
-            <TableCell align="center" colSpan={3}>
+            <TableCell align="center" colSpan={4}>
               Details
             </TableCell>
             <TableCell align="right">Rate</TableCell>
@@ -93,34 +93,54 @@ export default function SaleEntry() {
         </TableHead>
         <TableBody>
           {items.map((item, index) => (
-            <TableRow key={item.desc}>
+            <TableRow key={index}>
               <TableCell>
                 <input
                   type="text"
+                  name="desc"
                   value={item.desc}
-                  onChange={(event) => handleDescriptionChange(event, index)}
+                  onChange={handleItemChange(index)}
                 />
               </TableCell>
               <TableCell align="right">
                 <input
                   type="text"
+                  name="qty"
                   value={item.qty}
-                  onChange={(event) => handleQtyChange(event, index)}
+                  onChange={handleItemChange(index)}
                 />
               </TableCell>
               <TableCell align="right">
                 <input
                   type="text"
+                  name="rate"
                   value={item.rate}
-                  onChange={(event) => handleRateChange(event, index)}
+                  onChange={handleItemChange(index)}
                 />
               </TableCell>
               <TableCell align="right">{ccyFormat(item.total)}</TableCell>
+              <TableCell>
+                <button type="button" onClick={handleRemoveLineItem(index)}>
+                  <DeleteIcon size="1.25em" />
+                </button>
+              </TableCell>
             </TableRow>
           ))}
 
           <TableRow>
-            <TableCell rowSpan={3} />
+            <TableCell rowSpan={2} />
+            <TableCell colSpan={3} />
+            <TableCell align="right">
+              <div>
+                <button type="button" onClick={handleAddLineItem}>
+                  <AddIcon size="1.25em" /> Add Item
+                </button>
+              </div>
+            </TableCell>
+          </TableRow>
+
+          <TableRow>
+            <TableCell rowSpan={2} />
             <TableCell colSpan={2}>Subtotal</TableCell>
             <TableCell align="right">{ccyFormat(invoiceSubtotal())}</TableCell>
           </TableRow>
